@@ -14,3 +14,56 @@ a {
 * {
   box-sizing: border-box;
 }
+
+.mt-20 {
+  margin-top: 20px;
+}
+
+.pb-20 {
+  padding-bottom: 20px;
+}
+
+.post {
+  padding: 10px;
+  border-radius: 0.25rem;
+  border: 1px solid gainsboro;
+}
+
+.post-date {
+  margin: 0;
+  color: gray;
+  font-size: 14px;
+}
+
+.post-details {
+  display: flex;
+  padding: 10px;
+  justify-content: space-between;
+  border-top: 1px solid gainsboro;
+  border-bottom: 1px solid gainsboro;
+}
+
+.post-details p {
+  margin: 0;
+  color: gray;
+  font-size: 14px;
+}
+
+.comment-wrapper {
+  padding: 10px 15px;
+}
+
+.commentor-name {
+  margin: 0;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.comment {
+  margin: 10px 0;
+}
+
+.comment-text {
+  margin: 0;
+  font-size: 14px;
+}

@@ -1,65 +1,97 @@
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import React, { useState } from "react";
+import Posts from "../components/Posts";
+import { useRouter } from "next/router";
+import Navbar from "../components/Navbar";
+import fetch from "isomorphic-unfetch";
+import { useAuth } from "../context/auth";
+import { Form, Button, Spinner } from "react-bootstrap";
 
-export default function Home() {
+const Home = () => {
+  const { replace } = useRouter();
+  const [text, setText] = useState("");
+  const { user, setUserData } = useAuth();
+  const [loading, setLoading] = useState(false);
+
+  const logout = () => {
+    setUserData(null, true);
+    replace("/login");
+  };
+
+  const handleSubmit = async e => {
+    e && e.preventDefault();
+    const trimText = text.trim();
+    if (!trimText) {
+      alert("Post text must be required!");
+      return;
+    }
+    try {
+      setLoading(true);
+      const req = await fetch("/api/create-post", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          id: user.id,
+          text: trimText
+        })
+      });
+      const { message, error } = await req.json();
+      if (error) {
+        alert(message);
+        return;
+      }
+      setText("");
+    } catch (error) {
+      alert("something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className={styles.container}>
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
+    user && (
+      <div>
+        <Navbar onClick={logout} />
+        <br />
+        <div className="container mt-20 pb-20">
+          <Form onSubmit={handleSubmit}>
+            <Form.Control
+              rows="5"
+              value={text}
+              as="textarea"
+              disabled={loading}
+              placeholder="Write a post here..."
+              onChange={({ target }) => setText(target.value)}
+            />
+            <Button
+              className="mt-20"
+              variant="success"
+              disabled={loading}
+              onClick={handleSubmit}
+            >
+              {loading ? (
+                <>
+                  <Spinner
+                    as="span"
+                    animation="border"
+                    size="sm"
+                    role="status"
+                    aria-hidden="true"
+                  />{" "}
+                  Posting...
+                </>
+              ) : (
+                "Post"
+              )}
+            </Button>
+          </Form>
+          <br />
+          <Posts />
         </div>
-      </main>
+      </div>
+    )
+  );
+};
 
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
-    </div>
-  )
-}
+export default Home;
