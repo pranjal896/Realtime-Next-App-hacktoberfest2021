@@ -16,5 +16,4 @@ npm run dev
 ```
 
 ## Configure DB
-
-Change mongo uri in common folder
+Go to the common folder and change the mongo URI to configure databse
