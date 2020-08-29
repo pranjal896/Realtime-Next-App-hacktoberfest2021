@@ -1,32 +1,42 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Comment from "./Comment";
-import fetch from "isomorphic-unfetch";
+import { FiThumbsUp } from "react-icons/fi";
+import { Button, Spinner } from "react-bootstrap";
+import { useAuth } from "../context/auth";
 
 const Post = ({ data }) => {
   const postId = data._id;
-  const [comments, setComment] = useState(data.comments);
+  let likes = data.likes;
+  const comments = data.comments;
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const liked = likes.some(o => o.user === user.id);
 
-  // const addComment = obj => {
-  //   setComment([...comments, obj]);
-  // };
-
-  // useEffect(() => {
-  //   mounted = true;
-
-  //   const fetchPosts = async () => {
-  //     try {
-  //       const req = await fetch("/api/posts");
-  //       const { posts } = await req.json();
-  //       setPosts([...posts]);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   if (mounted) {
-  //     fetchPosts();
-  //   }
-  // }, []);
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+      const req = await fetch("/api/like-post", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          liked,
+          postId,
+          id: user.id
+        })
+      });
+      const { message, error, likedPost } = await req.json();
+      if (error) {
+        alert(message);
+        return;
+      }
+    } catch (error) {
+      alert("something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="post mt-20">
@@ -36,7 +46,30 @@ const Post = ({ data }) => {
       <p>{data?.text}</p>
       <div className="post-details">
         <p>
-          {data.likes.length} {data.likes.length > 1 ? "Likes" : "Like"}
+          <Button
+            disabled={loading}
+            onClick={handleSubmit}
+            variant={liked ? "info" : "outline-info"}
+          >
+            {loading ? (
+              <>
+                <Spinner
+                  as="span"
+                  animation="border"
+                  size="sm"
+                  role="status"
+                  aria-hidden="true"
+                />
+                {"  "}
+                <FiThumbsUp />
+              </>
+            ) : (
+              <FiThumbsUp />
+            )}
+          </Button>
+          {"  "}
+          {"  "}
+          {likes.length} {likes.length > 1 ? " Likes" : " Like"}
         </p>
         <p>
           {comments.length} {comments.length > 1 ? "Comments" : "Comment"}

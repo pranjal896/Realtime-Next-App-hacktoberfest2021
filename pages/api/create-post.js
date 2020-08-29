@@ -1,21 +1,6 @@
+import Server from "socket.io";
 import { PostModel } from "../../models";
 import dbConnect from "../../config/dbConnect";
-// import io from "../../server";
-
-var express = require("express");
-
-// App setup
-var app = express();
-var socket = require("socket.io");
-
-var server = app.listen(4000, function() {
-  console.log("listening for requests on port 4000,");
-});
-
-let io = socket(server);
-io.on("connection", function(socket) {
-  console.log(`${socket.id} is connected`);
-});
 
 dbConnect();
 
@@ -46,10 +31,12 @@ export default async (req, res) => {
           }
         }
       });
-
-    io.emit("addpost", {
-      post: post
+    const io = new Server(res.socket.server);
+    io.on("connection", socket => {
+      socket.emit("addpost", {
+        post: post
+      });
     });
+    res.status(200).json({ post });
   });
-  res.status(200).json({ success: true });
 };

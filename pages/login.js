@@ -93,7 +93,7 @@ const Login = () => {
         </Button>
         <br />
         <br />
-        {loading && (
+        {!loading && (
           <Form.Text className="text-center">
             Don't have an account?{" "}
             <Link href="/register">

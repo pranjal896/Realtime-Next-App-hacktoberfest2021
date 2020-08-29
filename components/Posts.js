@@ -1,51 +1,83 @@
-import React, { useEffect, useState } from "react";
+import React, { Component } from "react";
 import { Spinner } from "react-bootstrap";
 import Post from "./Post";
 import fetch from "isomorphic-unfetch";
-// import useSocket from "../config/useSocket";
-import io from "socket.io-client";
-const socket = io();
-// const socket = require("socket.io-client")("http://localhost:3000", {
-//   // transports: ["websocket"],
-//   // rejectUnauthorized: false
-// });
+import socket from "socket.io-client";
+import { removeDuplicate } from "../common/functions";
 
-const Posts = () => {
-  let mounted = false;
-  const [posts, setPosts] = useState(null);
-  const [loading, setLoading] = useState(true);
+class Posts extends Component {
+  state = {
+    posts: null,
+    loading: true
+  };
 
-  useEffect(() => {
-    mounted = true;
+  componentDidMount() {
+    this.fetchPosts();
+  }
 
-    const fetchPosts = async () => {
-      try {
-        const req = await fetch("/api/posts");
-        const { posts } = await req.json();
-        setPosts([...posts]);
-      } finally {
-        setLoading(false);
-      }
-    };
+  socketConnection = () => {
+    socket().on("addpost", data => {
+      const newPost = data.post;
+      this.mergePosts(newPost);
+    });
+    socket().on("postcomment", data => {
+      const newCommentedPost = data.commentedPost;
+      this.mergeCommentedPost(newCommentedPost);
+    });
+    socket().on("likepost", data => {
+      const likedPost = data.likedPost;
+      this.mergeLikedPost(likedPost);
+    });
+  };
 
-    if (mounted) {
-      fetchPosts();
-      socket.on("now", post => {
-        console.log(post, " useSocket post");
-        // setPosts([...posts, post]);
-      });
+  fetchPosts = async () => {
+    try {
+      const req = await fetch("/api/posts");
+      const res = await req.json();
+      this.setState({ posts: res.posts });
+    } finally {
+      this.setState({ loading: false });
+      this.socketConnection();
     }
-  }, []);
+  };
 
-  return loading ? (
-    <div className="text-center">
-      <Spinner animation="border" />
-    </div>
-  ) : posts && posts.length > 0 ? (
-    posts.map(post => <Post key={post._id} data={post} />)
-  ) : (
-    <p className="text-center">No Post Available</p>
-  );
-};
+  mergePosts = newPost => {
+    const { posts } = this.state;
+    this.setState({
+      posts: posts ? removeDuplicate([newPost, ...posts]) : [newPost]
+    });
+  };
+
+  mergeCommentedPost = newCommentedPost => {
+    let { posts } = this.state;
+    const postId = newCommentedPost._id;
+    const index = posts.findIndex(o => o._id === postId);
+    posts[index].comments = newCommentedPost.comments;
+    this.setState({ posts });
+  };
+
+  mergeLikedPost = likedPost => {
+    let { posts } = this.state;
+    const postId = likedPost._id;
+    const index = posts.findIndex(o => o._id === postId);
+    posts[index].likes = likedPost.likes;
+    this.setState({ posts });
+  };
+
+  render() {
+    const { loading, posts } = this.state;
+    return loading ? (
+      <div className="text-center">
+        <Spinner animation="border" />
+      </div>
+    ) : posts && posts.length > 0 ? (
+      posts
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .map(post => <Post key={post._id} data={post} />)
+    ) : (
+      <p className="text-center">No Post Available</p>
+    );
+  }
+}
 
 export default Posts;

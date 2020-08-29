@@ -1,6 +1,6 @@
+import { PostModel } from "../../models";
 import dbConnect from "../../config/dbConnect";
 dbConnect();
-import { PostModel } from "../../models";
 
 export default async (_, res) => {
   const posts = await PostModel.find({})

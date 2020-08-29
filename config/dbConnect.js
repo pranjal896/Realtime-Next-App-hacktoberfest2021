@@ -10,7 +10,7 @@ async function dbConnect() {
   const db = await mongoos.connect(mongoURI, {
     useCreateIndex: true,
     useNewUrlParser: true,
-    useFindAndModify: true,
+    useFindAndModify: false,
     useUnifiedTopology: true
   });
   connection.isConnected = db.connections[0].readyState;

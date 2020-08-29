@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/router";
+
 const AuthContext = createContext();
+const AuthConsumer = AuthContext.Consumer;
 
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -35,4 +37,4 @@ const AuthProvider = ({ children }) => {
 
 const useAuth = () => useContext(AuthContext);
 
-export { AuthProvider, useAuth };
+export { AuthProvider, useAuth, AuthContext, AuthConsumer };

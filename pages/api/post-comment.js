@@ -1,4 +1,4 @@
-import io from "../../config/socket";
+import Server from "socket.io";
 import { PostModel } from "../../models";
 import dbConnect from "../../config/dbConnect";
 
@@ -9,7 +9,7 @@ export default async (req, res) => {
     body: { id, text, postId }
   } = req;
 
-  const comment = await PostModel.findOneAndUpdate(
+  const commentedPost = await PostModel.findOneAndUpdate(
     { _id: postId },
     {
       $push: {
@@ -31,5 +31,11 @@ export default async (req, res) => {
       }
     }
   });
-  res.status(200).json({ success: true });
+  const io = new Server(res.socket.server);
+  io.on("connection", socket => {
+    socket.emit("postcomment", {
+      commentedPost: commentedPost
+    });
+  });
+  res.status(200).json({ commentedPost });
 };
